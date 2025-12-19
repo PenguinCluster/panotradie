@@ -7,9 +7,10 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Settings } from "lucide-react";
-
 export const BotSettings = () => {
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const [loading, setLoading] = useState(false);
   const [settings, setSettings] = useState({
     profit_threshold_percentage: 5.0,
@@ -20,161 +21,17 @@ export const BotSettings = () => {
     safety_check_enabled: true,
     min_liquidity_usd: 5000,
     max_rugpull_risk_score: 30,
-    trading_token_mint: "So11111111111111111111111111111111111111112",
+    trading_token_mint: "So11111111111111111111111111111111111111112"
   });
-
   const handleSave = () => {
     setLoading(true);
     setTimeout(() => {
       toast({
         title: "Settings Saved",
-        description: "Your bot settings have been saved locally.",
+        description: "Your bot settings have been saved locally."
       });
       setLoading(false);
     }, 500);
   };
-
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          <Settings className="h-5 w-5" />
-          <CardTitle>Bot Settings</CardTitle>
-        </div>
-        <CardDescription>
-          Configure trading parameters and risk management
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="profit-threshold">Profit Threshold (%)</Label>
-            <Input
-              id="profit-threshold"
-              type="number"
-              step="0.1"
-              value={settings.profit_threshold_percentage}
-              onChange={(e) => setSettings({ ...settings, profit_threshold_percentage: parseFloat(e.target.value) })}
-            />
-            <p className="text-sm text-muted-foreground">Sell when profit reaches this percentage</p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="stop-loss">Stop Loss (%)</Label>
-            <Input
-              id="stop-loss"
-              type="number"
-              step="0.1"
-              value={settings.stop_loss_percentage}
-              onChange={(e) => setSettings({ ...settings, stop_loss_percentage: parseFloat(e.target.value) })}
-            />
-            <p className="text-sm text-muted-foreground">Sell when loss reaches this percentage</p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="max-investment">
-              Max Investment Per Token ({settings.trading_token_mint === "So11111111111111111111111111111111111111112" ? "SOL" : "USDC"})
-            </Label>
-            <Input
-              id="max-investment"
-              type="number"
-              step="1"
-              value={settings.max_investment_per_token}
-              onChange={(e) => setSettings({ ...settings, max_investment_per_token: parseFloat(e.target.value) })}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="max-positions">Max Concurrent Positions</Label>
-            <Input
-              id="max-positions"
-              type="number"
-              value={settings.max_concurrent_positions}
-              onChange={(e) => setSettings({ ...settings, max_concurrent_positions: parseInt(e.target.value) })}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="min-liquidity">Min Liquidity (USD)</Label>
-            <Input
-              id="min-liquidity"
-              type="number"
-              step="1000"
-              value={settings.min_liquidity_usd}
-              onChange={(e) => setSettings({ ...settings, min_liquidity_usd: parseFloat(e.target.value) })}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="max-risk">Max Rugpull Risk Score</Label>
-            <Input
-              id="max-risk"
-              type="number"
-              step="1"
-              min="0"
-              max="100"
-              value={settings.max_rugpull_risk_score}
-              onChange={(e) => setSettings({ ...settings, max_rugpull_risk_score: parseFloat(e.target.value) })}
-            />
-            <p className="text-sm text-muted-foreground">0-100 scale, lower is safer</p>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="trading-token">Trading Token</Label>
-          <Select 
-            value={settings.trading_token_mint === "So11111111111111111111111111111111111111112" ? "SOL" : "USDC"}
-            onValueChange={(value) => setSettings({ 
-              ...settings, 
-              trading_token_mint: value === "SOL" 
-                ? "So11111111111111111111111111111111111111112" 
-                : "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
-            })}
-          >
-            <SelectTrigger id="trading-token">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="SOL">SOL (Native Solana)</SelectItem>
-              <SelectItem value="USDC">USDC (Stablecoin)</SelectItem>
-            </SelectContent>
-          </Select>
-          <p className="text-sm text-muted-foreground">
-            Token used for buying/selling (balance must be available in wallet)
-          </p>
-        </div>
-
-        <div className="space-y-4 pt-4 border-t">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="auto-detect">Auto Token Detection</Label>
-              <p className="text-sm text-muted-foreground">Automatically detect and trade new tokens</p>
-            </div>
-            <Switch
-              id="auto-detect"
-              checked={settings.auto_detect_enabled}
-              onCheckedChange={(checked) => setSettings({ ...settings, auto_detect_enabled: checked })}
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="safety-check">Safety Checks</Label>
-              <p className="text-sm text-muted-foreground">Enable rugpull and honeypot detection</p>
-            </div>
-            <Switch
-              id="safety-check"
-              checked={settings.safety_check_enabled}
-              onCheckedChange={(checked) => setSettings({ ...settings, safety_check_enabled: checked })}
-            />
-          </div>
-        </div>
-
-        <Button onClick={handleSave} disabled={loading} className="w-full">
-          {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Save Settings
-        </Button>
-      </CardContent>
-    </Card>
-  );
+  return;
 };
