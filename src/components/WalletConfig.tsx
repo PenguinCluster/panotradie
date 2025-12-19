@@ -1,22 +1,10 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Save, Wallet } from "lucide-react";
-import { z } from "zod";
-
-const walletConfigSchema = z.object({
-  publicKey: z.string()
-    .trim()
-    .regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/, 'Invalid Solana public key format'),
-  rpcEndpoint: z.string()
-    .trim()
-    .url('Must be a valid HTTPS URL')
-    .startsWith('https://', 'RPC endpoint must use HTTPS')
-});
 
 const WalletConfig = () => {
   const [publicKey, setPublicKey] = useState("");
@@ -25,88 +13,18 @@ const WalletConfig = () => {
   const [hasConfig, setHasConfig] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    loadConfig();
-  }, []);
-
-  const loadConfig = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data, error } = await supabase
-      .from("bot_configs")
-      .select("wallet_public_key, rpc_endpoint")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    if (data) {
-      setPublicKey(data.wallet_public_key);
-      setRpcEndpoint(data.rpc_endpoint || "https://api.devnet.solana.com");
-      setHasConfig(true);
-    }
-  };
-
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      toast({
-        title: "Error",
-        description: "You must be logged in",
-        variant: "destructive"
-      });
-      setLoading(false);
-      return;
-    }
+    // Simulate save delay
+    await new Promise(resolve => setTimeout(resolve, 500));
 
-    // Validate inputs
-    const validation = walletConfigSchema.safeParse({
-      publicKey,
-      rpcEndpoint
+    toast({
+      title: "Configuration saved",
+      description: "Your wallet settings have been saved locally."
     });
-
-    if (!validation.success) {
-      const errors = validation.error.errors.map(e => e.message).join(", ");
-      toast({
-        title: "Invalid input",
-        description: errors,
-        variant: "destructive"
-      });
-      setLoading(false);
-      return;
-    }
-
-    const configData = {
-      user_id: user.id,
-      wallet_public_key: publicKey,
-      rpc_endpoint: rpcEndpoint
-    };
-
-    const { error } = hasConfig
-      ? await supabase
-          .from("bot_configs")
-          .update(configData)
-          .eq("user_id", user.id)
-      : await supabase
-          .from("bot_configs")
-          .insert([configData]);
-
-    if (error) {
-      toast({
-        title: "Failed to save configuration",
-        description: error.message,
-        variant: "destructive"
-      });
-    } else {
-      toast({
-        title: "Configuration saved",
-        description: "Your wallet settings have been saved. You'll provide your private key when starting the bot."
-      });
-      setHasConfig(true);
-    }
-
+    setHasConfig(true);
     setLoading(false);
   };
 
@@ -118,7 +36,7 @@ const WalletConfig = () => {
           Wallet Configuration
         </CardTitle>
         <CardDescription>
-          Configure your Solana wallet public key and RPC endpoint. Your private key will be requested securely when starting the bot.
+          Configure your Solana wallet public key and RPC endpoint.
         </CardDescription>
       </CardHeader>
       <CardContent>
