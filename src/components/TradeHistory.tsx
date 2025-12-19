@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -21,30 +22,50 @@ interface Trade {
   created_at: string;
 }
 
-// Mock data for UI display
-const mockTrades: Trade[] = [
-  {
-    id: "1",
-    token_address: "So11111111111111111111111111111111111111112",
-    action: "buy",
-    amount: 1.5,
-    price: 145.23,
-    status: "success",
-    created_at: new Date().toISOString()
-  },
-  {
-    id: "2",
-    token_address: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-    action: "sell",
-    amount: 100,
-    price: 1.00,
-    status: "success",
-    created_at: new Date(Date.now() - 3600000).toISOString()
-  }
-];
-
 const TradeHistory = () => {
-  const [trades] = useState<Trade[]>(mockTrades);
+  const [trades, setTrades] = useState<Trade[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadTrades();
+
+    // Set up realtime subscription
+    const channel = supabase
+      .channel("trade_history_changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "trade_history"
+        },
+        () => {
+          loadTrades();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const loadTrades = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data } = await supabase
+      .from("trade_history")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    if (data) {
+      setTrades(data);
+    }
+    setLoading(false);
+  };
 
   const getStatusBadge = (status: string) => {
     const variants = {
