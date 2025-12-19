@@ -1,8 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { TrendingUp, TrendingDown, Activity, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -20,69 +19,51 @@ interface Position {
   last_updated: string;
 }
 
+// Mock data for UI preview
+const mockPositions: Position[] = [
+  {
+    id: "1",
+    token_address: "So11111111111111111111111111111111111111112",
+    token_symbol: "SOL",
+    entry_price: 150.25,
+    current_price: 165.80,
+    amount: 10,
+    usdc_invested: 1502.50,
+    current_value: 1658.00,
+    profit_loss_percentage: 10.35,
+    opened_at: new Date(Date.now() - 86400000).toISOString(),
+    last_updated: new Date().toISOString(),
+  },
+  {
+    id: "2",
+    token_address: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    token_symbol: "BONK",
+    entry_price: 0.000025,
+    current_price: 0.000022,
+    amount: 50000000,
+    usdc_invested: 1250,
+    current_value: 1100,
+    profit_loss_percentage: -12.00,
+    opened_at: new Date(Date.now() - 172800000).toISOString(),
+    last_updated: new Date().toISOString(),
+  },
+];
+
 export const ActivePositions = () => {
   const { toast } = useToast();
-  const [positions, setPositions] = useState<Position[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [positions] = useState<Position[]>(mockPositions);
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    loadPositions();
-    
-    const channel = supabase
-      .channel('active_positions_changes')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'active_positions'
-      }, () => {
-        loadPositions();
-      })
-      .subscribe();
-
-    const interval = setInterval(refreshPrices, 30000);
-
-    return () => {
-      supabase.removeChannel(channel);
-      clearInterval(interval);
-    };
-  }, []);
-
-  const loadPositions = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data, error } = await supabase
-      .from('active_positions')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('opened_at', { ascending: false });
-
-    if (!error && data) {
-      setPositions(data);
-    }
-    setLoading(false);
-  };
-
-  const refreshPrices = async () => {
+  const refreshPrices = () => {
     setRefreshing(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('monitor-prices');
-      
-      if (error) throw error;
-      
-      if (data?.positions) {
-        setPositions(data.positions);
-        toast({
-          title: "Prices Updated",
-          description: `Updated ${data.positions.length} positions`,
-        });
-      }
-    } catch (error) {
-      console.error('Error refreshing prices:', error);
-    } finally {
+    // Simulate refresh - replace with your Python backend logic
+    setTimeout(() => {
+      toast({
+        title: "Prices Updated",
+        description: `Updated ${positions.length} positions`,
+      });
       setRefreshing(false);
-    }
+    }, 1000);
   };
 
   const getProfitColor = (percentage: number) => {
@@ -91,8 +72,8 @@ export const ActivePositions = () => {
     return "text-gray-600";
   };
 
-  const totalInvested = positions.reduce((sum, p) => sum + parseFloat(p.usdc_invested.toString()), 0);
-  const totalValue = positions.reduce((sum, p) => sum + parseFloat(p.current_value.toString()), 0);
+  const totalInvested = positions.reduce((sum, p) => sum + p.usdc_invested, 0);
+  const totalValue = positions.reduce((sum, p) => sum + p.current_value, 0);
   const totalProfitLoss = totalValue - totalInvested;
   const totalProfitLossPercentage = totalInvested > 0 ? (totalProfitLoss / totalInvested) * 100 : 0;
 
@@ -165,19 +146,19 @@ export const ActivePositions = () => {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
                     <div>
                       <p className="text-muted-foreground">Entry</p>
-                      <p className="font-medium">${parseFloat(position.entry_price.toString()).toFixed(6)}</p>
+                      <p className="font-medium">${position.entry_price.toFixed(6)}</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Current</p>
-                      <p className="font-medium">${parseFloat(position.current_price.toString()).toFixed(6)}</p>
+                      <p className="font-medium">${position.current_price.toFixed(6)}</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Amount</p>
-                      <p className="font-medium">{parseFloat(position.amount.toString()).toFixed(2)}</p>
+                      <p className="font-medium">{position.amount.toFixed(2)}</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Value</p>
-                      <p className="font-medium">${parseFloat(position.current_value.toString()).toFixed(2)}</p>
+                      <p className="font-medium">${position.current_value.toFixed(2)}</p>
                     </div>
                   </div>
                   

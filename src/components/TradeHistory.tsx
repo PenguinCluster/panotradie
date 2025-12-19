@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -22,50 +21,39 @@ interface Trade {
   created_at: string;
 }
 
+// Mock data for UI preview
+const mockTrades: Trade[] = [
+  {
+    id: "1",
+    token_address: "So11111111111111111111111111111111111111112",
+    action: "buy",
+    amount: 10,
+    price: 150.25,
+    status: "success",
+    created_at: new Date(Date.now() - 86400000).toISOString(),
+  },
+  {
+    id: "2",
+    token_address: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    action: "buy",
+    amount: 50000000,
+    price: 0.000025,
+    status: "success",
+    created_at: new Date(Date.now() - 172800000).toISOString(),
+  },
+  {
+    id: "3",
+    token_address: "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+    action: "sell",
+    amount: 1000000,
+    price: 0.00015,
+    status: "success",
+    created_at: new Date(Date.now() - 259200000).toISOString(),
+  },
+];
+
 const TradeHistory = () => {
-  const [trades, setTrades] = useState<Trade[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadTrades();
-
-    // Set up realtime subscription
-    const channel = supabase
-      .channel("trade_history_changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "trade_history"
-        },
-        () => {
-          loadTrades();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  const loadTrades = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data } = await supabase
-      .from("trade_history")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(50);
-
-    if (data) {
-      setTrades(data);
-    }
-    setLoading(false);
-  };
+  const [trades] = useState<Trade[]>(mockTrades);
 
   const getStatusBadge = (status: string) => {
     const variants = {
