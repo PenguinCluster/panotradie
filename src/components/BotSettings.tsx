@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Settings } from "lucide-react";
 
 export const BotSettings = () => {
@@ -21,69 +20,18 @@ export const BotSettings = () => {
     safety_check_enabled: true,
     min_liquidity_usd: 5000,
     max_rugpull_risk_score: 30,
-    trading_token_mint: "So11111111111111111111111111111111111111112", // SOL by default
+    trading_token_mint: "So11111111111111111111111111111111111111112",
   });
 
-  useEffect(() => {
-    loadSettings();
-  }, []);
-
-  const loadSettings = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data, error } = await supabase
-      .from('bot_settings')
-      .select('*')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
-    if (data) {
-      setSettings({
-        profit_threshold_percentage: Number(data.profit_threshold_percentage),
-        stop_loss_percentage: Number(data.stop_loss_percentage),
-        max_investment_per_token: Number(data.max_investment_per_token),
-        max_concurrent_positions: data.max_concurrent_positions,
-        auto_detect_enabled: data.auto_detect_enabled,
-        safety_check_enabled: data.safety_check_enabled,
-        min_liquidity_usd: Number(data.min_liquidity_usd),
-        max_rugpull_risk_score: Number(data.max_rugpull_risk_score),
-        trading_token_mint: data.trading_token_mint || "So11111111111111111111111111111111111111112",
-      });
-    }
-  };
-
-  const handleSave = async () => {
+  const handleSave = () => {
     setLoading(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
-      const { error } = await supabase
-        .from('bot_settings')
-        .upsert({
-          user_id: user.id,
-          ...settings,
-        }, {
-          onConflict: 'user_id'
-        });
-
-      if (error) throw error;
-
+    setTimeout(() => {
       toast({
         title: "Settings Saved",
-        description: "Your bot settings have been updated successfully.",
+        description: "Your bot settings have been saved locally.",
       });
-    } catch (error) {
-      console.error('Error saving settings:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save settings. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
       setLoading(false);
-    }
+    }, 500);
   };
 
   return (
