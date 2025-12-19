@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,91 +17,28 @@ import {
 const BotStatus = () => {
   const [isActive, setIsActive] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [hasConfig, setHasConfig] = useState(false);
+  const [hasConfig] = useState(true);
   const [showPrivateKeyDialog, setShowPrivateKeyDialog] = useState(false);
   const [privateKey, setPrivateKey] = useState("");
   const { toast } = useToast();
 
-  useEffect(() => {
-    loadStatus();
-    
-    // Poll for status updates every 5 seconds
-    const interval = setInterval(loadStatus, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const loadStatus = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data } = await supabase
-      .from("bot_configs")
-      .select("is_active")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    if (data) {
-      setIsActive(data.is_active);
-      setHasConfig(true);
-    }
-  };
-
-  const handleToggle = async () => {
+  const handleToggle = () => {
     if (!isActive) {
-      // Starting bot - need private key
       setShowPrivateKeyDialog(true);
     } else {
-      // Stopping bot - no private key needed
-      await stopBot();
+      stopBot();
     }
   };
 
   const stopBot = async () => {
     setLoading(true);
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      toast({
-        title: "Error",
-        description: "You must be logged in",
-        variant: "destructive"
-      });
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      const { error: functionError } = await supabase.functions.invoke('trading-bot', {
-        body: { action: 'stop' },
-        headers: {
-          Authorization: `Bearer ${session?.access_token}`
-        }
-      });
-
-      if (functionError) throw functionError;
-
-      const { error: updateError } = await supabase
-        .from("bot_configs")
-        .update({ is_active: false })
-        .eq("user_id", user.id);
-
-      if (updateError) throw updateError;
-
-      setIsActive(false);
-      toast({
-        title: "Bot Stopped",
-        description: "Your trading bot has been stopped"
-      });
-    } catch (error: any) {
-      toast({
-        title: "Failed to stop bot",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    setIsActive(false);
+    toast({
+      title: "Bot Stopped",
+      description: "Your trading bot has been stopped"
+    });
     setLoading(false);
   };
 
@@ -117,56 +53,16 @@ const BotStatus = () => {
     }
 
     setLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 500));
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      toast({
-        title: "Error",
-        description: "You must be logged in",
-        variant: "destructive"
-      });
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      const { data, error: functionError } = await supabase.functions.invoke('trading-bot', {
-        body: { 
-          action: 'start',
-          private_key: privateKey 
-        },
-        headers: {
-          Authorization: `Bearer ${session?.access_token}`
-        }
-      });
-
-      if (functionError) throw functionError;
-
-      const { error: updateError } = await supabase
-        .from("bot_configs")
-        .update({ is_active: true })
-        .eq("user_id", user.id);
-
-      if (updateError) throw updateError;
-
-      setIsActive(true);
-      setShowPrivateKeyDialog(false);
-      setPrivateKey(""); // Clear the private key from memory
-      
-      toast({
-        title: "Bot Started",
-        description: "Your trading bot is now active"
-      });
-    } catch (error: any) {
-      toast({
-        title: "Failed to start bot",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-
+    setIsActive(true);
+    setShowPrivateKeyDialog(false);
+    setPrivateKey("");
+    
+    toast({
+      title: "Bot Started",
+      description: "Your trading bot is now active"
+    });
     setLoading(false);
   };
 
@@ -221,7 +117,7 @@ const BotStatus = () => {
           <DialogHeader>
             <DialogTitle>Enter Private Key</DialogTitle>
             <DialogDescription>
-              Your private key is required to start the trading bot. It will be used securely by the backend service and never stored in the database.
+              Your private key is required to start the trading bot.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -236,7 +132,7 @@ const BotStatus = () => {
                 disabled={loading}
               />
               <p className="text-xs text-muted-foreground">
-                Your private key is transmitted securely and only held in memory by the trading service.
+                Your private key will be used by your backend service.
               </p>
             </div>
             <div className="flex gap-2">
