@@ -11,20 +11,16 @@ import BotStatus from "@/components/BotStatus";
 import { BotSettings } from "@/components/BotSettings";
 import { ActivePositions } from "@/components/ActivePositions";
 import { ManualTrade } from "@/components/ManualTrade";
+
 const Dashboard = () => {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
+
   useEffect(() => {
     // Check for existing session
-    supabase.auth.getSession().then(({
-      data: {
-        session
-      }
-    }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (!session) {
         navigate("/auth");
@@ -33,31 +29,35 @@ const Dashboard = () => {
     });
 
     // Listen for auth changes
-    const {
-      data: {
-        subscription
-      }
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       if (!session) {
         navigate("/auth");
       }
     });
+
     return () => subscription.unsubscribe();
   }, [navigate]);
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate("/");
   };
+
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background-secondary to-background">
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background-secondary to-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>;
+      </div>
+    );
   }
+
   if (!session) {
     return null;
   }
-  return <div className="min-h-screen bg-gradient-to-br from-background via-background-secondary to-background">
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-background via-background-secondary to-background">
       <div className="absolute inset-0 bg-grid-pattern opacity-5" />
       
       <div className="relative">
@@ -82,11 +82,16 @@ const Dashboard = () => {
           <ManualTrade />
           
 
-          
+          <div className="grid gap-6 md:grid-cols-2">
+            <BotSettings />
+            <ActivePositions />
+          </div>
           
           <TradeHistory />
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default Dashboard;
