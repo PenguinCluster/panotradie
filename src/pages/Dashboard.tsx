@@ -11,8 +11,6 @@ import BotStatus from "@/components/BotStatus";
 import { BotSettings } from "@/components/BotSettings";
 import { ActivePositions } from "@/components/ActivePositions";
 import { ManualTrade } from "@/components/ManualTrade";
-import { TokenSafety } from "@/components/TokenSafety";
-import { TokenLaunches } from "@/components/TokenLaunches";
 
 const Dashboard = () => {
   const [session, setSession] = useState(null);
@@ -83,10 +81,6 @@ const Dashboard = () => {
           
           <ManualTrade />
           
-          <div className="grid gap-6 md:grid-cols-2">
-            <TokenSafety />
-            <TokenLaunches />
-          </div>
 
           <div className="grid gap-6 md:grid-cols-2">
             <BotSettings />
