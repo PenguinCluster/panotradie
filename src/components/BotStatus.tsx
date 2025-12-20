@@ -29,16 +29,34 @@ const BotStatus = () => {
     }
   };
 
-  const stopBot = () => {
+  const stopBot = async () => {
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const response = await fetch("https://predietary-jules-unsubtly.ngrok-free.dev/stop", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to stop bot");
+      }
+
       setIsActive(false);
       toast({
         title: "Bot Stopped",
         description: "Your trading bot has been stopped"
       });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to stop bot",
+        variant: "destructive"
+      });
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   };
 
   const startBot = async () => {
