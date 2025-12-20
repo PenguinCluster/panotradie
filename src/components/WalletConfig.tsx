@@ -6,7 +6,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Save, Wallet } from "lucide-react";
 
-const WalletConfig = () => {
+interface WalletConfigProps {
+  onConfigSaved?: () => void;
+}
+
+const WalletConfig = ({ onConfigSaved }: WalletConfigProps) => {
   const [publicKey, setPublicKey] = useState("");
   const [rpcEndpoint, setRpcEndpoint] = useState("https://api.devnet.solana.com");
   const [loading, setLoading] = useState(false);
@@ -23,8 +27,8 @@ const WalletConfig = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ 
-          rpcUrl: rpcEndpoint,
-          privateKey: publicKey 
+          rpc_url: rpcEndpoint,
+          private_key: publicKey 
         }),
       });
 
@@ -36,6 +40,7 @@ const WalletConfig = () => {
         title: "Configuration saved",
         description: "Your wallet settings have been saved successfully."
       });
+      onConfigSaved?.();
     } catch (error) {
       toast({
         title: "Error",

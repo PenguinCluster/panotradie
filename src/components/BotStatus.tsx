@@ -14,7 +14,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-const BotStatus = () => {
+interface BotStatusProps {
+  isConfigured: boolean;
+}
+
+const BotStatus = ({ isConfigured }: BotStatusProps) => {
   const [isActive, setIsActive] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showPrivateKeyDialog, setShowPrivateKeyDialog] = useState(false);
@@ -131,12 +135,17 @@ const BotStatus = () => {
             <Button 
               onClick={handleToggle}
               className="w-full"
-              disabled={loading}
+              disabled={loading || (!isActive && !isConfigured)}
               variant={isActive ? "destructive" : "default"}
             >
               {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               {isActive ? "Stop Bot" : "Start Bot"}
             </Button>
+            {!isConfigured && !isActive && (
+              <p className="text-xs text-muted-foreground text-center">
+                Save your wallet configuration first to enable the bot
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>
