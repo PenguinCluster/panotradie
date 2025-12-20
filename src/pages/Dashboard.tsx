@@ -14,6 +14,7 @@ import { ManualTrade } from "@/components/ManualTrade";
 const Dashboard = () => {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isConfigured, setIsConfigured] = useState(false);
   const navigate = useNavigate();
   const {
     toast
@@ -75,8 +76,8 @@ const Dashboard = () => {
 
         <div className="container mx-auto px-4 py-8 space-y-6">
           <div className="grid gap-6 md:grid-cols-2">
-            <WalletConfig />
-            <BotStatus />
+            <WalletConfig onConfigSaved={() => setIsConfigured(true)} />
+            <BotStatus isConfigured={isConfigured} />
           </div>
           
           <ManualTrade />
